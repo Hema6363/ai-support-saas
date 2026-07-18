@@ -1,0 +1,26 @@
+# Node
+node_modules/
+.next/
+out/
+package-lock.json
+npm-debug.log*
+
+# Python
+venv/
+.venv/
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+*.sqlite3
+
+# Env
+.env
+.env.*
+
+# VS Code
+.vscode/
+
+# OS
+.DS_Store
+Thumbs.db
