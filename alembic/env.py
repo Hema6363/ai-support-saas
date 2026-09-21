@@ -1,40 +1,45 @@
 from logging.config import fileConfig
-import logging
 import os
 import sys
 
-from sqlalchemy import engine_from_config
+from alembic import context
 from sqlalchemy import pool
 
-from alembic import context
+# Add backend directory to sys.path so app.* imports resolve cleanly
+current_dir = os.path.dirname(__file__)
+backend_dir = os.path.abspath(os.path.join(current_dir, "..", "backend"))
+sys.path.insert(0, backend_dir)
 
-# ensure app package is importable
-sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
-sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..')))
+from app.core.config import settings
+from app.db.session import engine
+from app.models.base import Base
 
-# this is the Alembic Config object, which provides
-# access to the values within the .ini file in use.
+# Import every model so Alembic can detect them
+from app.models.tenant import Tenant
+from app.models.user import User
+from app.models.document import Document
+from app.models.conversation import Conversation
+from app.models.message import Message
+from app.models.ticket import Ticket
+from app.models.refresh_token import RefreshToken
+
 config = context.config
 
-# Interpret the config file for Python logging.
-fileConfig(config.config_file_name)
-logger = logging.getLogger('alembic')
+config.set_main_option("sqlalchemy.url", settings.database_url)
 
-# Import the SQLAlchemy metadata from the application
-from backend.app.models.base import Base
-from backend.app.db.session import engine
+if config.config_file_name is not None:
+    fileConfig(config.config_file_name)
 
-# provide the metadata for 'autogenerate'
 target_metadata = Base.metadata
 
 
 def run_migrations_offline():
-    url = config.get_main_option("sqlalchemy.url")
     context.configure(
-        url=url,
+        url=settings.database_url,
         target_metadata=target_metadata,
         literal_binds=True,
         dialect_opts={"paramstyle": "named"},
+        compare_type=True,
     )
 
     with context.begin_transaction():
@@ -42,10 +47,12 @@ def run_migrations_offline():
 
 
 def run_migrations_online():
-    connectable = engine
-
-    with connectable.connect() as connection:
-        context.configure(connection=connection, target_metadata=target_metadata)
+    with engine.connect() as connection:
+        context.configure(
+            connection=connection,
+            target_metadata=target_metadata,
+            compare_type=True,
+        )
 
         with context.begin_transaction():
             context.run_migrations()

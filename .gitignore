@@ -24,3 +24,10 @@ __pycache__/
 # OS
 .DS_Store
 Thumbs.db
+
+# Local uploaded/generated files
+uploads/
+backend/uploads/
+
+# TypeScript build cache
+*.tsbuildinfo
